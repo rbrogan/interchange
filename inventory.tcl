@@ -88,5 +88,59 @@ proc LogAdjustment {InventoryId MenuId Type {Amount 1} {When 0}} {
      return [LastId inventory_logs]
 }
 
+proc Compare {LeftInventoryId RightInventoryId} {
+     set ProtoTransactionList {}
+     
+     # Return a list of tuples that could be used to 
+     # make a series of transactions to make the left 
+     # equal to the right.
+     
+     # Items where left is greater than right
+     set sql "SELECT i1.menuid, i1.amount, i2.amount FROM inventory_info i1, inventory_info i2 ON i1.menuid = i2.menuid WHERE i1.inventoryid = $LeftInventoryId AND i2.inventoryid = $RightInventoryId AND i1.amount > i2.amount"
+     puts $sql
+     set Results [Raise [mydb eval $sql] 3]
+     foreach Result $Results {
+          set MenuId [lindex $Result 0]
+          set LeftAmount [lindex $Result 1]
+          set RightAmount [lindex $Result 2]
+          set Difference [expr $LeftAmount - $RightAmount]
+          
+          lappend ProtoTransactionList [list $MenuId "reduce" $Difference]
+     }
+     # Items where right is greater than left
+     set sql "SELECT i1.menuid, i1.amount, i2.amount FROM inventory_info i1, inventory_info i2 ON i1.menuid = i2.menuid WHERE i1.inventoryid = $LeftInventoryId AND i2.inventoryid = $RightInventoryId AND i1.amount < i2.amount"
+     puts $sql
+     set Results [Raise [mydb eval $sql] 3]
+     foreach Result $Results {
+          set MenuId [lindex $Result 0]
+          set LeftAmount [lindex $Result 1]
+          set RightAmount [lindex $Result 2]
+          set Difference [expr $RightAmount - $LeftAmount]
+          
+          lappend ProtoTransactionList [list $MenuId "increase" $Difference]
+     }
+     # Items on left but not on right
+     set sql "SELECT i1.menuid, i1.amount FROM inventory_info i1 WHERE i1.inventoryid = $RightInventoryId AND (SELECT count(*) FROM inventory_info i2 WHERE menuid = i1.menuid) = 0"
+     puts $sql
+     set Results [Raise [mydb eval $sql] 2]
+     foreach Result $Results {
+          set MenuId [lindex $Result 0]
+          set Amount [lindex $Result 1]
+          
+          lappend ProtoTransactionList [list $MenuId "reduce" $Difference]
+     }
+     # Items on right but not on left
+     set sql "SELECT i2.menuid, i2.amount FROM inventory_info i2 WHERE i2.inventoryid = $RightInventoryId AND (SELECT count(*) FROM inventory_info i1 WHERE menuid = i2.menuid) = 0"
+     puts $sql     
+     set Results [Raise [mydb eval $sql] 2]
+     foreach Result $Results {
+          set MenuId [lindex $Result 0]
+          set Amount [lindex $Result 1]
+          
+          lappend ProtoTransactionList [list $MenuId "increase" $Difference]
+     }
+     
+     return $ProtoTransactionList
+}
 
 }
