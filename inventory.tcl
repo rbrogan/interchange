@@ -63,6 +63,24 @@ proc AdjustLevel {InventoryId MenuId Amount} {
      mydb eval $sql
 }
 
+proc Replicate {InventoryId {NewInventoryDesc 0}} {
+     if {$NewInventoryDesc == 0} {
+          set NewInventoryDesc "Replica of -- [Q1 "SELECT desc FROM inventories WHERE id = $InventoryId"]"          
+     }
+     
+     set NewInventoryId [Create $NewInventoryDesc]
+     set sql "SELECT menuid, amount FROM inventory_info WHERE inventoryid = $InventoryId"
+     set Results [Raise [mydb eval $sql] 2]
+     foreach Result $Results {
+          set MenuId [lindex $Result 0]
+          set Amount [lindex $Result 1]
+          
+          AddItem $NewInventoryId $MenuId $Amount
+     }
+     
+     return $NewInventoryId
+}
+
 proc ListInventories {} {
      set sql "SELECT id, desc FROM inventories"
      puts $sql
