@@ -8,4 +8,4 @@
 # script is sourced, the variable $dir must contain the
 # full path name of this file's directory.
 
-package ifneeded interchange 1.0 [list source [file join $dir account.tcl]]\n[list source [file join $dir inventory.tcl]]\n[list source [file join $dir menu.tcl]]\n[list source [file join $dir rate.tcl]]\n[list source [file join $dir xact.tcl]]
+package ifneeded interchange 1.0 [list source [file join $dir account.tcl]]\n[list source [file join $dir interchange.tcl]]\n[list source [file join $dir inventory.tcl]]\n[list source [file join $dir menu.tcl]]\n[list source [file join $dir rate.tcl]]\n[list source [file join $dir xact.tcl]]

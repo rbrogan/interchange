@@ -26,4 +26,43 @@ proc SetDbFilePath {FilePath} {
      sqlite3 mydb $FilePath
 }
 
+proc CreateXactFromRate {RateId {Desc 0}} {
+     set XactGroupId [Xact::Create [RateNS::Desc $RateId]]
+     
+     set BuyOutInventoryId [Q1 "SELECT inventoryid FROM rate_items WHERE rateid = $RateId AND type = 'buy-out'"]
+     set BuyMenuId [Q1 "SELECT menuid FROM rate_items WHERE rateid = $RateId AND type = 'buy-out'"]
+     set BuyAmount [Q1 "SELECT amount FROM rate_items WHERE rateid = $RateId AND type = 'buy-out'"]
+     set BuyOutAccountId [Q1 "SELECT id FROM accounts WHERE inventoryid = $BuyOutInventoryId"]
+     
+     set SellOutInventoryId [Q1 "SELECT inventoryid FROM rate_items WHERE rateid = $RateId AND type = 'sell-out'"]
+     set SellMenuId [Q1 "SELECT menuid FROM rate_items WHERE rateid = $RateId AND type = 'sell-out'"]
+     set SellAmount [Q1 "SELECT amount FROM rate_items WHERE rateid = $RateId AND type = 'sell-out'"]
+     set SellOutAccountId [Q1 "SELECT id FROM accounts WHERE inventoryid = $SellOutInventoryId"]
+     
+     ReduceAndLogAndAccount $BuyOutInventoryId $BuyMenuId $BuyAmount $BuyOutAccountId $XactGroupId
+     IncreaseAndLogAndAccount $BuyInInventoryId $BuyMenuId $BuyAmount $BuyInAccountId $XactGroupId
+     ReduceAndLogAndAccount $SellOutInventoryId $SellMenuId $SellAmount $SellOutAccountId $XactGroupId
+     IncreaseAndLogAndAccount $SellInInventoryId $SellMenuId $SellAmount $SellInAccountId $XactGroupId
+     
+     return $XactGroupId
 }
+
+proc Increase_Log_Account_Add {InventoryId MenuId Amount AccountId XactGroupId {Cuando 0}} {
+     set LogId [InventoryNS::IncreaseAndLog $InventoryId $MenuId $Amount $Cuando]
+     set AccountEntryId [AccountNS::MakeEntry $AccountId $LogId $XactGroupId]
+     XactNS::AddItem $XactGroupId $AccountEntryId
+}
+
+proc Reduce_Log_Account_Add {InventoryId MenuId Amount AccountId XactGroupId {Cuando 0}} {
+     set LogId [InventoryNS::ReduceAndLog $InventoryId $MenuId $Amount]
+     set AccountEntryId [AccountNS::MakeEntry $AccountId $LogId $XactGroupId]
+     XactNS::AddItem $XactGroupId $AccountEntryId
+}
+
+proc AccountMakeEntry_XactAddItem {AccountId LogId XactGroupId} {
+     set AccountEntryId [AccountNS::MakeEntry $AccountId $LogId $XactGroupId]
+     XactNS::AddItem $XactGroupId $AccountEntryId
+}
+
+}
+

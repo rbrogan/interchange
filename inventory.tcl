@@ -132,6 +132,18 @@ proc LogAdjustment {InventoryId MenuId Type {Amount 1} {When 0}} {
      return [LastId inventory_logs]
 }
 
+proc IncreaseAndLog {InventoryId MenuId {Amount 1} {When 0}} {
+     IncreaseStock $InventoryId $MenuId $Amount
+     set LogId [LogAdjustment $InventoryId $MenuId increase $Amount $When]
+     return $LogId
+}
+
+proc ReduceAndLog {InventoryId MenuId {Amount 1} {When 0}} {
+     ReduceStock $InventoryId $MenuId $Amount
+     set LogId [LogAdjustment $InventoryId $MenuId reduce $Amount $When]
+     return $LogId
+}
+
 proc Compare {LeftInventoryId RightInventoryId} {
      set ProtoTransactionList {}
      

@@ -35,6 +35,11 @@ proc Id {Desc} {
      return [Q1 $sql]
 }
 
+proc Desc {Id} {
+     set sql "SELECT desc FROM rates WHERE id = $Id"
+     return [Q1 $sql]
+}
+
 proc BuyOutAmount {MenuItemId} {     
      set RateId [Id [MenuNS::Desc $MenuItemId]]
      set sql "SELECT amount FROM rate_items WHERE rateid = $RateId AND type = 'buy-out'"
