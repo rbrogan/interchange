@@ -6,7 +6,7 @@ namespace eval RateNS {
 
 proc Create {Desc} {
      set sql "INSERT INTO rates (desc) VALUES ('$Desc')"
-     DbgPrint $sql
+     puts $sql
      mydb eval $sql
      return [LastId rates]
 }
@@ -21,7 +21,7 @@ proc Delete {RateIds} {
 
 proc AddItem {RateId Type MenuId InventoryId Amount} {
      set sql "INSERT INTO rate_items (rateid, type, menuid, inventoryid, amount) VALUES ($RateId, '$Type', $MenuId, $InventoryId, $Amount)"
-     DbgPrint $sql
+     puts $sql
      mydb eval $sql
 }
 

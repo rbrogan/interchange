@@ -40,58 +40,53 @@ proc Show {MenuItemIds} {
      return [RunSelect $sql]
 }
 
-proc CreateGroup {Desc} {
-     set sql "INSERT INTO menu_groups (desc) VALUES ('$Desc')"
+proc CreateGroup {Desc {GroupId 0}} {
+     if {$GroupId == 0} {
+          set GroupId [IncrDbGlobal anygroupid]
+     }
+     set sql "INSERT INTO menu_group_info (groupid, desc) VALUES ($GroupId, '$Desc')"
      mydb eval $sql
-     return [LastId menu_groups]
+     return [LastId menu_group_info]
 }
 
 proc DeleteGroup {Group} {
      if {[string is integer $Group]} {
-          set WhereClause "id = $Group"
+          set WhereClause "groupid = $Group"
+          set sql2 "DELETE FROM menu_group_info WHERE groupid = $Group"
      } else {
-          set WhereClause "desc = '$Group'"
+          set WhereClause "groupid = (SELECT groupid FROM menu_group_info WHERE desc = '$Group')"
+          set sql2 "DELETE FROM menu_group_info WHERE desc = '$Group'"
      }
      set sql "DELETE FROM menu_groups WHERE $WhereClause"
      mydb eval $sql
+     mydb eval $sql2
 }
 
 proc AddToGroup {GroupId MenuIds} {
-     set sql "SELECT menu_item_list FROM menu_groups WHERE id = $GroupId"
-     set MenuItemList [Q1 $sql]
-     lappend MenuItemList $MenuIds
-     set sql "UPDATE menu_groups SET menu_item_list = '$MenuItemList'"
-     mydb eval $sql
+     foreach MenuId $MenuIds {
+          set sql "INSERT INTO menu_groups (menuid, groupid) VALUES ($MenuId, $GroupId)"
+          mydb eval $sql
+     }
 }
 
 proc RemoveFromGroup {GroupId MenuIds} {
-     set sql "SELECT menu_item_list FROM menu_groups WHERE id = $GroupId"
-     set MenuItemList [Q1 $sql]
-     
-     foreach MenuId $MenuIds {
-          set Index [lsearch $MenuItemList $MenuId]
-          if {$Index != -1} {
-               ListRemove MenuItemList $Index
-          }
-     }
-     
-     set sql "UPDATE menu_groups SET menu_item_list = '$MenuItemList'"
-     mydb eval $sql     
+     set sql "DELETE FROM menu_groups WHERE groupid = $GroupId AND menuid IN ([join $MenuIds ","])"
+     mydb eval $sql
 }
 
 proc ListInGroup {Group} {
      if {[string is integer $Group]} {
-          set WhereClause "id = $Group"
+          set WhereClause "groupid = $Group"
      } else {
-          set WhereClause "desc = '$Group'"
+          set WhereClause "groupid = (SELECT groupid FROM menu_group_info WHERE desc = '$Group')"
      }
-     set sql "SELECT menu_item_list FROM menu_groups WHERE $WhereClause"
-     return [Q1 $sql]
+
+     set sql "SELECT menuid, (SELECT desc FROM menu_items WHERE id = menuid) FROM menu_groups WHERE $WhereClause"
+     return [Raise [mydb eval $sql] 2]
 }
 
 proc ShowGroup {Group} {
-     set MenuItemIds [ListInGroup $Group]
-     Show $MenuItemIds
+     PrintList [ListInGroup $Group]
 }
 
 }
