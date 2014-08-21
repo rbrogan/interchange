@@ -122,7 +122,7 @@ proc ListItems {InventoryIds} {
 proc LogAdjustment {InventoryId MenuId Type {Amount 1} {When 0}} {
      if {$When == 0} {
           set When "datetime('now', 'localtime')"
-     } else {
+     } elseif {[IsDateTime $When]} {
           set When "'$When'"
      }
      

@@ -39,10 +39,10 @@ proc CreateXactFromRate {RateId {Desc 0}} {
      set SellAmount [Q1 "SELECT amount FROM rate_items WHERE rateid = $RateId AND type = 'sell-out'"]
      set SellOutAccountId [Q1 "SELECT id FROM accounts WHERE inventoryid = $SellOutInventoryId"]
      
-     ReduceAndLogAndAccount $BuyOutInventoryId $BuyMenuId $BuyAmount $BuyOutAccountId $XactGroupId
-     IncreaseAndLogAndAccount $BuyInInventoryId $BuyMenuId $BuyAmount $BuyInAccountId $XactGroupId
-     ReduceAndLogAndAccount $SellOutInventoryId $SellMenuId $SellAmount $SellOutAccountId $XactGroupId
-     IncreaseAndLogAndAccount $SellInInventoryId $SellMenuId $SellAmount $SellInAccountId $XactGroupId
+     Reduce_Log_Account_Add $BuyOutInventoryId $BuyMenuId $BuyAmount $BuyOutAccountId $XactGroupId
+     Increase_Log_Account_Add $BuyInInventoryId $BuyMenuId $BuyAmount $BuyInAccountId $XactGroupId
+     Reduce_Log_Account_Add $SellOutInventoryId $SellMenuId $SellAmount $SellOutAccountId $XactGroupId
+     Increase_Log_Account_Add $SellInInventoryId $SellMenuId $SellAmount $SellInAccountId $XactGroupId
      
      return $XactGroupId
 }
