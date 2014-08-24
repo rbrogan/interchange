@@ -19,6 +19,10 @@ proc Delete {InventoryIds} {
      mydb eval $sql
 }
 
+proc Desc {InventoryId} {
+     return [Q1 "SELECT desc FROM inventories WHERE id = $InventoryId"]
+}
+
 proc ChangeDesc {InventoryId NewDesc} {
      set sql "UPDATE inventories SET desc = '$NewDesc' WHERE id = $InventoryId"
      puts $sql
@@ -44,6 +48,11 @@ proc StockLevel {InventoryId MenuId} {
 }
 
 proc IncreaseStock {InventoryId MenuId Amount} {
+     set sql "SELECT count(*) FROM inventory_info WHERE inventoryid = $InventoryId AND menuid = $MenuId"
+     if {[Q1 $sql] == 0} {
+          AddItem $InventoryId $MenuId $Amount
+          return
+     }
      set CurrentLevel [StockLevel $InventoryId $MenuId]
      set NewLevel [expr $CurrentLevel + $Amount]
      AdjustLevel $InventoryId $MenuId $NewLevel
@@ -60,6 +69,12 @@ proc ReduceStock {InventoryId MenuId Amount} {
 proc AdjustLevel {InventoryId MenuId Amount} {
      set sql "UPDATE inventory_info SET amount = $Amount WHERE inventoryid = $InventoryId AND menuid = $MenuId"
      puts $sql
+     mydb eval $sql
+}
+
+proc DeleteLog {LogId} {
+     set sql "DELETE FROM inventory_info WHERE id = $LogId"
+     puts $sql     
      mydb eval $sql
 }
 
@@ -130,6 +145,11 @@ proc LogAdjustment {InventoryId MenuId Type {Amount 1} {When 0}} {
      puts $sql
      mydb eval $sql
      return [LastId inventory_logs]
+}
+
+proc FetchLog {LogId} {
+     set sql "SELECT * FROM inventory_logs WHERE id = $LogId"
+     return [mydb eval $sql]
 }
 
 proc IncreaseAndLog {InventoryId MenuId {Amount 1} {When 0}} {

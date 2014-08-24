@@ -11,7 +11,7 @@ proc Create {{Desc 0} {AccountEntryIds 0}} {
                set sql "INSERT INTO xacts (xactgroupid, accountentryid) VALUES ($NewXactGroupId, $AccountEntryId)"
                mydb eval $sql
           }
-     }
+     }    
      if {$Desc != 0} {
           set sql "INSERT INTO xactgroup_info (xactgroupid, notes) VALUES ($NewXactGroupId, '$Desc')"
      } else {
@@ -46,9 +46,34 @@ proc ChangeDesc {XactGroupId NewDesc} {
      mydb eval $sql
 }
 
+proc ListItems {XactGroupId} {
+     set ItemList {}
+
+     set sql "SELECT id, accountentryid FROM xacts WHERE xactgroupid = $XactGroupId"
+     set Results [Raise [mydb eval $sql] 2]
+     foreach Result $Results {
+          set XactId [lindex $Result 0]
+          set AccountEntryId [lindex $Result 1]
+          set sql "SELECT logid FROM account_entries WHERE id = $AccountEntryId"
+          set LogId [Q1 $sql]
+          set LogEntry [InventoryNS::FetchLog $LogId]
+          set InventoryId [lindex $LogEntry 1]
+          set MenuId [lindex $LogEntry 2]
+          set Type [lindex $LogEntry 3]
+          set Amount [lindex $LogEntry 4]
+          set Cuando [lindex $LogEntry 5]
+          
+          set InventoryDesc [InventoryNS::Desc $InventoryId]
+          set MenuDesc [MenuNS::Desc $MenuId]
+          
+          lappend ItemList [list $XactId $InventoryDesc $MenuDesc $Type $Amount $Cuando]
+     }
+     return $ItemList
+}
+
 proc Show {XactGroupId} {
-     set sql "SELECT accountentryid FROM xacts WHERE xactgroupid = $XactGroupId"
-     
+     puts [Q1 "SELECT notes FROM xactgroup_info WHERE xactgroupid = $XactGroupId"]
+     PrintList [ListItems $XactGroupId]
 }
 
 }

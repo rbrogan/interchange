@@ -63,9 +63,9 @@ proc ListAccounts {} {
 }
 
 proc ListEntries {AccountIds} {
-     set sql "SELECT x.id, y.notes FROM account_entries x JOIN xactgroup_info y ON x.xactgroupid = y.id WHERE x.accountid IN ([join $AccountIds ","])"
+     set sql "SELECT e.id, (SELECT notes FROM xactgroup_info WHERE xactgroupid = e.xactgroupid), (SELECT desc FROM menu_items WHERE id = l.menuid), l.type, l.amount, l.cuando FROM account_entries e JOIN inventory_logs l ON e.logid = l.id WHERE accountid  IN ([join $AccountIds ","]) ORDER BY cuando"
      puts $sql
-     set Results [Raise [mydb eval $sql] 2]
+     set Results [Raise [mydb eval $sql] 6]
 }
 
 }
